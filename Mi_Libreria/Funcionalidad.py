@@ -4,7 +4,7 @@ from IPython.display import display
 
 from ipydatagrid import DataGrid
 
-def cargar_archivo_interactivo(nombre_variable='df'):
+def Cargar_excel(nombre_variable='df'):
     uploader = widgets.FileUpload(
         accept='.csv, .xlsx',
         multiple=False
