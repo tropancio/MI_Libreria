@@ -44,4 +44,6 @@ def nuevo_registros(Tabla_nueva, Tabla_antigua):
     else:
         print("Tablas distintas")
         return None
+    
+    #Comit
 
