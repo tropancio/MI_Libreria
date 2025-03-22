@@ -1,9 +1,0 @@
-setup.py
-Mi_Libreria/Mi_Libreria.py
-Mi_Libreria/__init__.py
-mi_libreria_cruzes.egg-info/PKG-INFO
-mi_libreria_cruzes.egg-info/SOURCES.txt
-mi_libreria_cruzes.egg-info/dependency_links.txt
-mi_libreria_cruzes.egg-info/requires.txt
-mi_libreria_cruzes.egg-info/top_level.txt
-tests/test_cruces.py

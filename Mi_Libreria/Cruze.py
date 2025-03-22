@@ -69,6 +69,7 @@ def Procesador(data1, data2, Cruze, tolerancia):
             if 0 in columnas_base:
                 columnas_base = columnas_base[:columnas_base.index(0) + 1]
             
+            
             Encontrado1 = pd.merge(
                 Encontrado1[columnas_base], 
                 Resultado_comb, 
@@ -105,56 +106,3 @@ def Proceso(data1, data2, Cruze, Agrupacion="", tolerancia=0):
     Todo1=pd.merge(tabla_cruzada,data1,on="Id_x",how="left")
     Todo2=pd.merge(Todo1,data2,on="Id_y",how="left")
     return Todo2
-
-# Función para obtener un resumen de las columnas de una tabla
-def Resumen_columnas(tabla):
-    Resumen = pd.DataFrame(columns=["Columna", "Cantidad", "Elementos"])
-    for x in tabla.columns:
-        try:
-            elemento, cantidad = np.unique(tabla[x].values, return_counts=True)
-            Resumen.loc[len(Resumen)] = [x, len(elemento), elemento]
-        except:
-            Resumen.loc[len(Resumen)] = [x, 0, "Error"]
-    return Resumen.sort_values("Cantidad", ascending=False)
-
-# Función para encontrar elementos comunes entre dos listas
-def Comunes(lista1, lista2, nombre="Key"):
-    set1, set2 = set(lista1), set(lista2)
-    todos_los_valores = set1 | set2
-    reglas = ["OK" if valor in set1 and valor in set2 else "L1" if valor in set1 else "L2" for valor in todos_los_valores]
-    
-    return pd.DataFrame({nombre: list(todos_los_valores), "Regla": reglas})
-
-# Función para añadir clave y/o índice a una tabla
-def Añadir_key_and_Indice(tabla, columna="Key", Key=True, Indice=False):
-    tabla = tabla.copy()
-    if Key:
-        tabla[columna] = tabla.apply(lambda row: ' '.join(row.astype(str)), axis=1)
-        tabla[columna] = tabla[columna].str.strip().str.lower()
-    if Indice:
-        tabla["Indice"] = tabla.groupby(columna).cumcount() + 1
-        new_col = f"{columna}2"
-        tabla[new_col] = tabla["Indice"].astype(str) + "-" + tabla[columna]
-        tabla.drop(columns=["Indice"], inplace=True)
-    return tabla
-
-# Función para identificar nuevos registros en una tabla comparada con otra
-def nuevo_registros(Tabla_nueva, Tabla_antigua):
-    col_nueva = Tabla_nueva.columns.values
-    col_original = Tabla_antigua.columns.values
-
-    if len(col_nueva) == len(col_original):
-        tab_nueva = Añadir_key_and_Indice(Tabla_nueva, Indice=True)
-        tab_original = Añadir_key_and_Indice(Tabla_antigua, Indice=True)
-        
-        l = Comunes(tab_nueva["Key2"], tab_original["Key2"]).rename(columns={"Key": "Key2"})
-        new = l[l["Regla"] == "L1"].merge(tab_nueva, on="Key2", how="left")
-        return new[col_nueva]
-    else:
-        print("Tablas distintas")
-        return None
-
-
-def listar(lista):
-    for x,y  in enumerate(lista):
-        print(f"{x} {y}")
