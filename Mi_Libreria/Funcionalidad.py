@@ -6,6 +6,7 @@ from io import BytesIO
 from IPython import get_ipython
 
 def Cargar_excel(nombre_variable='df'):
+    global df
     uploader = widgets.FileUpload(accept='.csv, .xlsx', multiple=False)
     boton_cargar = widgets.Button(description="Cargar archivo", button_style='success')
     output = widgets.Output()
