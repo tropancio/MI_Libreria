@@ -3,6 +3,8 @@ import ipywidgets as widgets
 from IPython.display import display
 from ipydatagrid import DataGrid
 
+from io import BytesIO
+
 def Cargar_excel(nombre_variable='df'):
     uploader = widgets.FileUpload(
         accept='.csv, .xlsx',
