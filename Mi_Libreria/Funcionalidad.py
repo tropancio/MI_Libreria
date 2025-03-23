@@ -6,7 +6,6 @@ from io import BytesIO
 from IPython import get_ipython
 
 def Cargar_excel(nombre_variable='df'):
-    global df
     uploader = widgets.FileUpload(accept='.csv, .xlsx', multiple=False)
     boton_cargar = widgets.Button(description="Cargar archivo", button_style='success')
     output = widgets.Output()
@@ -21,6 +20,7 @@ def Cargar_excel(nombre_variable='df'):
     }
 
     def procesar_archivo():
+        global df
         if not uploader.value:
             return False
 
@@ -77,6 +77,7 @@ def Cargar_excel(nombre_variable='df'):
             try:
                 if estado['tipo_archivo'] == 'csv':
                     df = pd.read_csv(BytesIO(estado['contenido']))
+
                 elif estado['tipo_archivo'] == 'xlsx':
                     if not estado['hoja_seleccionada']:
                         print("⚠️ Seleccioná una hoja.")
@@ -88,6 +89,7 @@ def Cargar_excel(nombre_variable='df'):
 
                 # Inyectar variable al entorno del notebook
                 get_ipython().user_ns[nombre_variable] = df
+
                 print(f"✅ Archivo cargado como `{nombre_variable}`.")
                 if estado['tipo_archivo'] == 'xlsx':
                     print(f"📑 Hoja seleccionada: {estado['hoja_seleccionada']}")
