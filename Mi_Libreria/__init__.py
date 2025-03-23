@@ -4,4 +4,4 @@ from .Mi_Libreria import Resumen_columnas, Añadir_key_and_Indice, nuevo_registr
 
 from .Principal import Comunes
 
-from .Funcionalidad import Cargar_excel, display_tabla
+from .Funcionalidad import Cargar_excel
