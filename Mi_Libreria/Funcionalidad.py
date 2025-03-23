@@ -54,6 +54,8 @@ def Cargar_excel(nombre_variable='df'):
     display(uploader, output)
 
 
+def tabla():
+    return df
 
 def display_tabla(df):
     dg = DataGrid(df)
