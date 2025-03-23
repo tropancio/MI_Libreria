@@ -4,7 +4,7 @@ setup(
     name="mi_libreria_cruzes",
     version="0.1",
     packages=find_packages(),
-    install_requires=["pandas", "numpy","IPython","ipywidgets"],
+    install_requires=["pandas", "numpy","IPython","ipywidgets","ipydatagrid"],
     author="Tu Nombre",
     description="Librería para cruces de datos y procesamiento avanzado",
     url="https://github.com/tu_usuario/mi_libreria_cruzes",
