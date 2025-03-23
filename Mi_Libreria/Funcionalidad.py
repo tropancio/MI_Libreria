@@ -16,20 +16,17 @@ def Cargar_excel(nombre_variable='df'):
 
         if name.endswith('.csv'):
             df = pd.read_csv(pd.io.common.BytesIO(content))
+            return df
         elif name.endswith('.xlsx'):
             df = pd.read_excel(pd.io.common.BytesIO(content))
+            return df
         else:
-            print("Formato no soportado")
-            return
-
+            return "Error"
+        
         # Guardar como variable global con el nombre que elijas
         globals()[nombre_variable] = df
     uploader.observe(on_upload_change, names='value')
     display(uploader)
-
-    return uploader
-
-
 
 
 def display_tabla(df):
