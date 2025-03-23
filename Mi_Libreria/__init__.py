@@ -1,7 +1,3 @@
-from .Cruze import *
-
-from .Mi_Libreria import *
-
-from .Principal import *
-
-from .Funcionalidad import *
+from . import Funcionalidad
+from . import Cruze
+from . import Principal
