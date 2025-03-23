@@ -66,6 +66,7 @@ def Cargar_excel(nombre_variable='df'):
             estado['hoja_seleccionada'] = change['new']
 
     def on_button_click(b):
+        global df
         with output:
             output.clear_output()
 
