@@ -1,7 +1,7 @@
-from .Cruze import Proceso
+from .Cruze import *
 
-from .Mi_Libreria import Resumen_columnas, Añadir_key_and_Indice, nuevo_registros
+from .Mi_Libreria import *
 
-from .Principal import Comunes
+from .Principal import *
 
-from .Funcionalidad import Cargar_excel
+from .Funcionalidad import *
