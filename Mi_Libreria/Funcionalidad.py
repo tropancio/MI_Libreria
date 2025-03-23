@@ -27,6 +27,10 @@ def Cargar_excel(nombre_variable='df'):
     uploader.observe(on_upload_change, names='value')
     display(uploader)
 
+    return uploader
+
+
+
 
 def display_tabla(df):
     dg = DataGrid(df)
