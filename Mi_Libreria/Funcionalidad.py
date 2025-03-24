@@ -109,5 +109,5 @@ def tabla():
     return df
 
 def display_tabla(df):
-    dg = DataGrid(df)
+    dg = DataGrid(df,editable=True)
     display(dg)
