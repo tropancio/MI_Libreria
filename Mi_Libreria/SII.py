@@ -30,10 +30,10 @@ class Pagina():
         }
 
         self.pagina=webdriver.Edge()
-        self.pagina.get(self.Enlaces["Boletas1"])
+        self.pagina.get(self.Enlaces["sii"])
     
-    def login(self,rut,clave):
-        try:
+    def logn(self,rut,clave):
+        tryi:
             InputRut=self.pagina.find_element(By.ID,"rutcntr")  
             InputClave = self.pagina.find_element(By.ID,"clave")
             Ingresar = self.pagina.find_element(By.ID,"bt_ingresar")

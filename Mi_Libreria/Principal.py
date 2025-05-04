@@ -41,17 +41,22 @@ def Resumen_columnas(tabla):
 
 
 # Función para añadir clave y/o índice a una tabla
-def Añadir_key_and_Indice(tabla, columna="Key", Key=True, Indice=False):
+def Añadir_key_and_Indice(tabla, columna="Key", Key=True, Indice=False,excepciones=[]):
+
     tabla = tabla.copy()
     if Key:
-        tabla[columna] = tabla.apply(lambda row: ' '.join(row.astype(str)), axis=1)
+        columnas_combinadas = [col for col in tabla.columns if col not in excepciones]
+        tabla[columna] = tabla[columnas_combinadas].apply(lambda row: ' '.join(row.astype(str)), axis=1)
         tabla[columna] = tabla[columna].str.strip().str.lower()
+
     if Indice:
         tabla["Indice"] = tabla.groupby(columna).cumcount() + 1
         new_col = f"{columna}2"
         tabla[new_col] = tabla["Indice"].astype(str) + "-" + tabla[columna]
         tabla.drop(columns=["Indice"], inplace=True)
+        
     return tabla
+
 
 # Función para identificar nuevos registros en una tabla comparada con otra
 def nuevo_registros(Tabla_nueva, Tabla_antigua):
