@@ -41,7 +41,7 @@ def Resumen_columnas(tabla):
 
 
 # Función para añadir clave y/o índice a una tabla
-def Añadir_key_and_Indice(tabla, columna="Key", Key=True, Indice=False,excepciones=[]):
+def Añadir_key_and_Indice(tabla, columna="Key", Key=True, Indice=False, excepciones=[]):
 
     tabla = tabla.copy()
     if Key:
@@ -73,6 +73,45 @@ def nuevo_registros(Tabla_nueva, Tabla_antigua):
     else:
         print("Tablas distintas")
         return None
+
+def Cruzar_registro(original,nuevo,excepciones=[],method="nuevos"):
+    """
+    method :
+        nuevos -> devuelve los registros nuevos
+        iguales -> devuelve los iguales
+    """
+    columna_original = original.columns
+    columna_nuevo = nuevo.columns
+    
+    original = original.apply(lambda x: x.astype(int) if pd.api.types.is_float_dtype(x) and (x % 1 == 0).all() else x)
+    nuevo = nuevo.apply(lambda x: x.astype(int) if pd.api.types.is_float_dtype(x) and (x % 1 == 0).all() else x)
+    original = original.apply(lambda x: x.dt.strftime('%d-%m-%Y') if pd.api.types.is_datetime64_dtype(x) else x)
+    nuevo = nuevo.apply(lambda x: x.dt.strftime('%d-%m-%Y') if pd.api.types.is_datetime64_dtype(x) else x)
+    
+    columns = Comunes(columna_original,columna_nuevo)
+    excepciones = list(columns[columns["Regla"]!="OK"]["Key"].values)+excepciones
+    columnas_final = columns[columns["Regla"]=="OK"]["Key"].values
+    
+    if len(original)>0:
+        original_key = Añadir_key_and_Indice(original,Indice=True,excepciones=excepciones)
+        nuevo_key = Añadir_key_and_Indice(nuevo,Indice=True,excepciones=excepciones)
+        cruze = Comunes(original_key["Key2"],nuevo_key["Key2"])
+        if method == "nuevos":
+            registros = cruze[cruze["Regla"]=="L2"]
+        elif method == "iguales":
+            registros = cruze[cruze["Regla"]=="OK"]
+        if len(registros)>0:
+            registros = registros.rename(columns={"Key":"Key2"})
+            return registros.merge(nuevo_key,on="Key2",how="left").drop(columns=["Key","Key2","Regla"])
+
+        else:
+            print("Error registros sin movimientos")
+            return cruze
+            
+    else: 
+        return nuevo 
+
+
     
 def Rellenar_Vacios(Tabla):
     for col in Tabla.columns:
