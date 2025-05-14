@@ -2,6 +2,13 @@ import pandas as pd
 import numpy as np
 import itertools
 
+def Enumerar(lista):
+    """
+    genera un listado de los elementos de una lista
+    """
+    for x,y  in enumerate(lista):
+        print(f"{x} {y}")
+
 
 def listar(lista):
     """
@@ -85,6 +92,7 @@ def Cruzar_registro(original,nuevo,excepciones=[],method="nuevos"):
     
     original = original.apply(lambda x: x.astype(int) if pd.api.types.is_float_dtype(x) and (x % 1 == 0).all() else x)
     nuevo = nuevo.apply(lambda x: x.astype(int) if pd.api.types.is_float_dtype(x) and (x % 1 == 0).all() else x)
+
     original = original.apply(lambda x: x.dt.strftime('%d-%m-%Y') if pd.api.types.is_datetime64_dtype(x) else x)
     nuevo = nuevo.apply(lambda x: x.dt.strftime('%d-%m-%Y') if pd.api.types.is_datetime64_dtype(x) else x)
     

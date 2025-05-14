@@ -26,14 +26,17 @@ class Pagina():
         "RCV":"https://www4.sii.cl/consdcvinternetui/#/index",
         "Boletas1":"https://loa.sii.cl/cgi_IMT/TMBCOC_MenuConsultasContribRec.cgi?dummy=1461943244650",
         "Boletas2":"https://zeus.sii.cl/cvc_cgi/bte/bte_indiv_cons2",
-        "F29":"https://www4.sii.cl/sifmConsultaInternet/index.html?dest=cifxx&form=29"
+        "F29":"https://www4.sii.cl/sifmConsultaInternet/index.html?dest=cifxx&form=29",
+        "DJ_Declarada1":"https://www2.sii.cl/djconsulta/estadoddjjs",
+        "DJ_Declarada2":"https://www4.sii.cl/djconsultarentaui/internet/#/consulta/",
+        "DJ_Agente_retenedor":"https://www4.sii.cl/djconsultarentaui/internet/#/agenteretenedor/"
         }
 
         self.pagina=webdriver.Edge()
         self.pagina.get(self.Enlaces["sii"])
     
     def logn(self,rut,clave):
-        tryi:
+        try:
             InputRut=self.pagina.find_element(By.ID,"rutcntr")  
             InputClave = self.pagina.find_element(By.ID,"clave")
             Ingresar = self.pagina.find_element(By.ID,"bt_ingresar")
@@ -58,9 +61,20 @@ class Pagina():
         salida.click()
     
     def Ingresar(self,pagina_sii=0):
-        """(sii,RCV,RH)"""
-        rutas=["sii","RCV","Boletas1","F29"]
+        """
+        pagina_sii:
+            0 sii
+            1 RCV
+            2 Boletas1
+            3 Boletas2
+            4 F29
+            5 DJ_Declarada1
+            6 DJ_Declarada2
+            7 DJ_Agente_retenedor
+        """
+        rutas = [x for x in self.Enlaces.keys()]
         self.pagina.get(self.Enlaces[rutas[pagina_sii]])
+
 
 
 def Datos(dato):
