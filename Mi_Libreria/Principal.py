@@ -10,13 +10,17 @@ def Enumerar(lista):
         print(f"{x} {y}")
 
 
-def listar(lista):
-    """
-    genera un listado de los elementos de una lista
-    """
-    for x,y  in enumerate(lista):
-        print(f"{x} {y}")
-
+def Numeros(valor):
+    original = str(valor).strip()
+    try:
+        return int(original)
+    except ValueError:
+        pass
+    try:
+        limpio = original.replace(".", "").replace(",", ".")
+        return float(limpio)
+    except ValueError:
+        return original
 
 
 def Comunes(lista1, lista2, nombre="Key"):
