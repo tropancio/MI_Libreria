@@ -22,19 +22,27 @@ def Numeros(valor):
     except ValueError:
         return original
 
-def Valores_Numericos(valor):
-    if isinstance(valor, str):
-        # Limpieza básica
-        valor = valor.strip()  # elimina espacios, tabs, saltos de línea al inicio y final
-        valor_limpio = re.sub(r'\.', '', valor).replace(',', '.')
+def Extraer_numeros(texto):
+    texto = str(texto)  # Forzamos a string por si viene otro tipo (e.g., lista, int, float, etc.)
+    numeros = re.findall(r'-?\d+(?:\.\d+)?', texto)
+    return [int(n) if '.' not in n else float(n) for n in numeros]
+
+def Valores_Numericos(valor1):
+    
+    valor = str(valor1).strip()  # elimina espacios, tabs, saltos de línea al inicio y final
+    valor_limpio = valor.replace('.', '').replace(',', '.')
+
+    try:
+        return int(valor_limpio)
+        
+    except ValueError:
         try:
-            return int(valor_limpio)
+            return float(valor_limpio)
+            
         except ValueError:
-            try:
-                return float(valor_limpio)
-            except ValueError:
-                return valor_limpio
-    return valor
+            pass
+                
+    return valor1
 
 def convertir_columnas(df):
     df = df.copy()

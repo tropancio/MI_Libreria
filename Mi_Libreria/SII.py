@@ -17,6 +17,25 @@ import time
 import pandas as pd
 import os
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+import re
+import time 
+import pandas as pd
+import os
+
 class Pagina():
     
     def __init__(self):
@@ -29,13 +48,18 @@ class Pagina():
         "F29":"https://www4.sii.cl/sifmConsultaInternet/index.html?dest=cifxx&form=29",
         "DJ_Declarada1":"https://www2.sii.cl/djconsulta/estadoddjjs",
         "DJ_Declarada2":"https://www4.sii.cl/djconsultarentaui/internet/#/consulta/",
-        "DJ_Agente_retenedor":"https://www4.sii.cl/djconsultarentaui/internet/#/agenteretenedor/"
+        "DJ_Agente_retenedor":"https://www4.sii.cl/djconsultarentaui/internet/#/agenteretenedor/",
+        "layout":"https://alerce.sii.cl/dior/dej/html/dj_autoverificacion.html"
         }
 
         self.pagina=webdriver.Edge()
         self.pagina.get(self.Enlaces["sii"])
     
-    def logn(self,rut,clave):
+    def Login(self,credenciales):
+        """
+        credenciales = [rut ,clave]
+        """
+        rut,clave = credenciales
         try:
             InputRut=self.pagina.find_element(By.ID,"rutcntr")  
             InputClave = self.pagina.find_element(By.ID,"clave")
@@ -54,10 +78,9 @@ class Pagina():
         assert len(respuesta)==0,"Contraseña Incorrecto"  
 
     def Exit(self):
-        enlaces = self.pagina.find_elements(By.TAG_NAME,"a")
-        for i in enlaces:
-            if i.text == "Cerrar Sesión":
-                salida = i
+        salida = WebDriverWait(Contenedor_tabla, 10).until(
+            EC.presence_of_element_located((By.XPATH, f'//*[text()="Cerrar Sesión"]'))
+            )
         salida.click()
     
     def Ingresar(self,pagina_sii=0):
@@ -76,218 +99,213 @@ class Pagina():
         self.pagina.get(self.Enlaces[rutas[pagina_sii]])
 
 
-
-def Datos(dato):
-    try:
-        return int(dato.replace(".",""))    
-        
-    except:
-        return dato
-    
-def Relleno(lista,largo):
-    if len(lista)>=largo:
-        return lista[:largo]
-        
-    else:
-        if len(lista)<largo:
-            lista+=["" for x in range(largo-len(lista))]
-            return lista
-            
-def Table(Tab):
-    elementos=[]
-    tamaño=[]
-    for y in Tab.find_elements(By.TAG_NAME,"tr"):
-        if y.text != " ":
-            tr=[Datos(x.text) for x in y.find_elements(By.TAG_NAME,"td")]
-            elementos.append(tr)
-            tamaño.append(len(tr))
-            
-    Tab0=pd.DataFrame(columns=Relleno(elementos[0],max(tamaño)))
-    for x in elementos:
-        Tab0.loc[len(Tab0)]=Relleno(x,max(tamaño))
-
-    Tab0.columns = ['Ver','N°','Estado','Fecha','Rut','Nombre o Razón Social','Soc. Prof.','Brutos','Retenido','Pagado','Boleta']
-    Tab0 = Tab0[Tab0["Estado"].isin(["VIG","NULL"])]
-    return Tab0   
-
-def Buscar_Elenetos(elementos,nombre):
-    for i in elementos:
-        if nombre in i.text:
-            return i
-    return None
-
-def Extraer_Numero(texto):
-    return re.findall(r'-?\d+\.?\d*', texto)
-
 class Procesos():
     def __init__(self,pagina):
         self.modulo=pagina
         self.pagina=self.modulo.pagina
-        self.Ruta = "C:/Users/MaximilianoAlarcon/Downloads/"
+        # self.Ruta = "C:/Users/MaximilianoAlarcon/Downloads/"
 
-    def Funcion_Espera_Boton(self,MsgError,buscador):
+    def formatear_texto(self,texto):
+        return texto.upper().replace(" ", "_")
+
+    def Ingresar_Periodo_RCV(self,Periodo=[]):
+        """
+        Ingresa un Periodo al formulario de Registro de compra
+        Periodo = [mes,año]
+        """
+        Contenedor = WebDriverWait(self.pagina, 10).until(
+            EC.presence_of_element_located((By.NAME, "formContribuyente"))
+        )
+        if len(Periodo)>0:
+            mes,ano = Periodo
+            meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+            Rut = WebDriverWait(Contenedor, 10).until(
+                EC.presence_of_element_located((By.NAME, "rut"))
+            )
+            Periodo = WebDriverWait(Contenedor, 10).until(
+                EC.presence_of_element_located((By.ID, "periodoMes"))
+            )
+            Periodo.send_keys(meses[mes])
+            Año = WebDriverWait(Contenedor, 10).until(
+                EC.presence_of_element_located((By.XPATH, '//*[@ng-model="periodoAnho"]'))
+            )
+            Año.send_keys(str(ano))   
+        boton = WebDriverWait(Contenedor, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME,"btn"))
+        )
+        boton.click()
+        
+    def Consultar_Existencia_Registros(self):
+        """
+        En la pestaña de RCV revisa que haya reigstros para consultar, devuelve
+        Registors -> True
+        Sin Reigstros -> False
+        """
         try:
-            # Esperar a que el botón de ingreso sea visible
-            btn = WebDriverWait(self.pagina, 2).until(
-                EC.visibility_of_element_located(buscador)
-            ) 
-            btn.click()  # Hacer clic en el botón
-            
-        except TimeoutException:
-            print(MsgError)
-            
-        except Exception as e:
-            print(f"Otro error ocurrió: {e}")
-        
-    def Extraer_Tabla(self):
-
-        table = self.pagina.find_element(By.CLASS_NAME,"ng-scope")
-        Registros = len(table.find_elements(By.TAG_NAME,"tr"))-1
-        
-        Tabla_Final =[]
-        
-        for x in range(Registros):
-            table = self.pagina.find_element(By.CLASS_NAME,"ng-scope")
-            fila = table.find_elements(By.TAG_NAME,"tr")[x+1]
-            Extra = fila.find_element(By.TAG_NAME,"a")
-            Extra_Extra = Extra.text
-            Extra.click()
-            time.sleep(2)
-            try:
-                cantidad = self.pagina.find_element(By.NAME,"tableCompra_length")
-                cantidad.send_keys(100)
-            
-                Registro = self.pagina.find_element(By.ID,"tableCompra")
-                html = Registro.get_attribute("outerHTML")
-                registro = pd.read_html(html)[0]
-                registro["Extra"]=Extra_Extra
-                Tabla_Final.append(registro)
-            except:
-                for y in self.pagina.find_elements(By.TAG_NAME,"button"):
-                    if y.text == "Cerrar":
-                        y.click()
-                        break
-            time.sleep(2)
-            for y in self.pagina.find_elements(By.TAG_NAME,"button"):
-                if y.text == "Volver":
-                    y.click()
-                    break
             time.sleep(1)
-            for x in self.pagina.find_elements(By.TAG_NAME,"a"):
-                if x.text == "Pendientes":
-                    x.click()
-                    break
-        try:
-            Registro_Final = pd.concat(Tabla_Final)
-            Registro_Final[Registro_Final[Registro_Final.columns[1]]!=Registro_Final.columns[1]]
-            return [Registro_Final,"Descarga Registro de Compra"]
-        
+            WebDriverWait(self.pagina,1).until(
+                EC.presence_of_element_located((By.CLASS_NAME,"alert-danger"))
+            )          
+            return False
+            
         except:
-            return [pd.DataFrame(),"Sin Registro de Compra"]
-
-    def Extraer_Compra(self,Tipo=False):
-        table = self.pagina.find_element(By.CLASS_NAME,"ng-scope")
-        Registros = len(table.find_elements(By.TAG_NAME,"tr"))-1
-        
-        Tabla_Final =[]
-        val = False
-        
-        for x in range(Registros):
-    
-            if Tipo:
-                for u in self.pagina.find_elements(By.TAG_NAME,"a"):
-                    if u.text == "Pendientes":
-                        val = True
-                        u.click()
-                        break
-    
-                assert val, "Error"
-    
-            time.sleep(1)
-            table = self.pagina.find_element(By.CLASS_NAME,"ng-scope")
-            fila = table.find_elements(By.TAG_NAME,"tr")[x+1]
+            return True
             
-            Extra = fila.find_element(By.TAG_NAME,"a")
-            Extra_Extra = Extra.text
-            Extra.click()
-            time.sleep(2)
+    def Ingresar_registro_RV(self,registro=0):
+        """
+        Ingresa a los diferentes tipos de registro
+        0 COMPRA
+        1 VENTA
+        2 Pendiente
+        """
+    
+        if registro == 0 or registro == 2:
+    
+            compra = WebDriverWait(self.pagina, 10).until(
+                EC.presence_of_element_located((By.ID,'tabCompra'))
+            )
             
+            compra.click()  
+            
+            if registro == 0:
+                return None
+    
+            pendiente = WebDriverWait(self.pagina, 10).until(
+                EC.presence_of_element_located((By.XPATH, f'//*[text()="Pendientes"]'))
+                )
+            
+            pendiente.click()
+            return None
+            
+        elif registro == 1:
+            
+            ventas = WebDriverWait(self.pagina, 10).until(
+                EC.presence_of_element_located((By.XPATH, f'//*[text()="VENTA"]'))
+                )
+            
+            ventas.click()
+            return None
+        
+    def Extraer_Registro(self,tipo1 = 0):
+        """
+        0 Compra
+        1 Ventas
+        """
+        
+        tipo0 = {
+            "Compra" : ["tableCompra_length","tableCompra_paginate"],
+            "Ventas" : ["tableVenta_length","tableVenta_wrapper"]
+        }
+        
+        tipo2 = [x for x in tipo0]
+        
+        Contenedor_tabla = WebDriverWait(self.pagina, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "ng-scope"))
+        )
+        tabla_resumen = WebDriverWait(Contenedor_tabla, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME,"table"))
+        )
+    
+        
+        a = pd.read_html(tabla_resumen.get_attribute("outerHTML"))[0]
+        
+        resumen = a.copy()
+        resumen = convertir_columnas(resumen.fillna(0))
+        resumen["TIPO"] = [Extraer_numeros(x)[0] for x in resumen["Tipo Documento"]]
+        
+        a = a.rename(columns = {x : self.formatear_texto(x) for x in a.columns})
+        a = a[a["TOTAL_DOCUMENTOS"]>0]
+        
+    
+        Todas_las_tablas = []
+        
+        for tipo_registro in a["TIPO_DOCUMENTO"]:
             try:
-                cantidad = self.pagina.find_element(By.NAME,"tableCompra_length")
-                cantidad.send_keys(100)
-                Registro = self.pagina.find_element(By.ID,"tableCompra")
-                html = Registro.get_attribute("outerHTML")
-                registro = pd.read_html(html)[0]
-                registro["Extra"]=Extra_Extra
-                Tabla_Final.append(registro)
+                tipo = WebDriverWait(Contenedor_tabla, 10).until(
+                    EC.presence_of_element_located((By.XPATH, f'//*[text()="{tipo_registro}"]'))
+                    )
+                tipo.click()
+                
+                detalle = WebDriverWait(self.pagina, 10).until(
+                    EC.presence_of_element_located((By.ID, 'detalle'))
+                    )
+        
+                largo_tabla = WebDriverWait(self.pagina, 10).until(
+                    EC.presence_of_element_located((By.ID, tipo0[tipo2[tipo1]][0]))
+                    )
+                
+                tabla_detalle = WebDriverWait(detalle, 10).until(
+                    EC.presence_of_element_located((By.TAG_NAME, 'table'))
+                    )
+                
+                nav_pagina = WebDriverWait(self.pagina, 10).until(
+                    EC.presence_of_element_located((By.ID, tipo0[tipo2[tipo1]][1]))
+                    )
+                                
+                tabla = WebDriverWait(detalle, 10).until(
+                    EC.presence_of_element_located((By.TAG_NAME, 'table'))
+                    )   
+                
+                registros = pd.read_html(detalle.get_attribute("outerHTML"))
+            
+                for x1 in registros:
+                    if len(x1)>1:
+                        registro = x1
+        
+                registro["TIPO"] = Extraer_numeros(tipo_registro)[0]
+            
+                Volver = WebDriverWait(self.pagina, 10).until(
+                    EC.presence_of_element_located((By.XPATH, f'//*[text()="Volver"]'))
+                    )
+                Volver.click()
+            
+                Todas_las_tablas.append(registro)
                 
             except:
-                for y in self.pagina.find_elements(By.TAG_NAME,"button"):
-                    if y.text == "Cerrar":
-                        y.click()
-                        break
-                        
-            time.sleep(2)
-            for y in self.pagina.find_elements(By.TAG_NAME,"button"):
-                if y.text == "Volver":
-                    y.click()
-                    break
-        
-            time.sleep(1)
-        print("Proceso")
-        Registro_Final = pd.concat(Tabla_Final)
-        Registro_Final = Registro_Final[Registro_Final[Registro_Final.columns[1]]!=Registro_Final.columns[1]]
-        Registro_Final = Registro_Final.applymap(lambda x: Datos(x))
-        Registro_Final["Cod"]=[Extraer_Numero(x)[0] for x in Registro_Final["Extra"]]
-        return Registro_Final
+                pass
     
-    def Compra_Venta(self,mes,ano,Compra=True,Venta=False,Rut="",Empresa1=""):
-            Reporte={}
-            Empresa = self.pagina.find_elements(By.NAME,"rut")
-            Periodo=self.pagina.find_elements(By.ID,"periodoMes")
-            Ano=self.pagina.find_elements(By.TAG_NAME,"select") 
-            for zzz in Ano:
-                if zzz.text[:3]=="Año":
-                    Ano0=zzz
+        final_final = pd.concat(Todas_las_tablas)
+        final_final = final_final.rename(columns={x:self.formatear_texto(x) for x in final_final.columns})
+        final_final = final_final[final_final["TIPO_COMPRA"]=="Del Giro"]
+        final_final = convertir_columnas(final_final.fillna(0))
         
-            assert len(Empresa)>0,"Campos No encontrados"
-            Periodo[0].send_keys(mes)
-            if ano!=None:
-                Ano0.send_keys(str(ano))
-
-            time.sleep(1)
-            botones = self.pagina.find_elements(By.CLASS_NAME,"btn")  
-            boton=Buscar_Elenetos(botones,"Consultar")
-            boton.click()
-            time.sleep(3)
+        return [resumen,final_final]
+    
+    def Compra_Venta(self, Parametro=[],Rut="",Empresa1=""):
+            self.modulo.Ingresar(pagina_sii=1)
+            self.Ingresar_Periodo_RCV(Parametro)
         
             #Compras
-            if True:
-                RC = pd.DataFrame()
-                RC= self.Extraer_Compra()
-
-                # except:
-                #     pass
-            
-                # try:
-                RC1 = pd.DataFrame()
-                RC1 = self.Extraer_Compra(Tipo=True)
-                # except:
-                #     pass
-
-                with pd.ExcelWriter(f"C:/Users/MaximilianoAlarcon/Downloads/{Empresa1}_{mes}.xlsx",engine='openpyxl') as write:
-                    RC.to_excel(write, sheet_name='Hoja1',index=False)
-                    RC1.to_excel(write, sheet_name='Hoja2',index=False)
+            RC = pd.DataFrame()
+    
+            self.Ingresar_registro_RV(registro=0)
+            if self.Consultar_Existencia_Registros():
+                    resumen,rc = self.Extraer_Registro(tipo1=0)
+                    RC = rc
         
+            #Pendiente
+            RCP = pd.DataFrame()
+        
+            self.Ingresar_registro_RV(registro=2)
+            if self.Consultar_Existencia_Registros():
+                    resumen,rc = self.Extraer_Registro(tipo1=0)
+                    RCP = rc
+    
             #Ventas
-            if Venta:
-                botones = self.pagina.find_elements(By.CLASS_NAME,"a")  
-                btn_venta=Buscar_Elenetos(botones,"VENTA")
-                assert btn_venta != None ,"Bonton pendiente no encontrado"
-                btn_venta.click()
-             
+            RV = pd.DataFrame()
+    
+            self.Ingresar_registro_RV(registro=1)
+            if self.Consultar_Existencia_Registros():
+                    resumen,rc = self.Extraer_Registro(tipo1=1)
+                    RV = rc
+        
+            Reporte={
+                "RC" : RC, "RCP" : RCP, "RV" : RV   
+            } 
+    
             return Reporte
 
+    
     def Registro_Compra(self,meses,ano=None,Empresa1="RC"):
         self.modulo.Ingresar(pagina_sii=1)
         assert type(meses)==list,"Los meses deben estar en una lista"
