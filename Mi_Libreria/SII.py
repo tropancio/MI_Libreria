@@ -7,6 +7,7 @@ from selenium.common.exceptions import TimeoutException
 
 import time 
 import pandas as pd
+import warnings
 import os
 
 from .Principal import *
