@@ -9,7 +9,7 @@ import time
 import pandas as pd
 import os
 
-from . import Principal
+from Principal import *
 
 class Pagina():
     
