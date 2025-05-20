@@ -54,7 +54,7 @@ class Pagina():
         assert len(respuesta)==0,"Contraseña Incorrecto"  
 
     def Exit(self):
-        salida = WebDriverWait(Contenedor_tabla, 10).until(
+        salida = WebDriverWait(self.pagina, 10).until(
             EC.presence_of_element_located((By.XPATH, f'//*[text()="Cerrar Sesión"]'))
             )
         salida.click()
