@@ -1,0 +1,10 @@
+# Dependencias para el módulo SII con Playwright
+playwright>=1.40.0
+pandas>=1.5.0
+python-dotenv>=1.0.0  # Para manejar archivos .env
+
+# Dependencias del módulo original (mantenidas por compatibilidad)
+selenium>=4.0.0
+pyodbc>=4.0.0
+ipywidgets>=8.0.0
+ipydatagrid>=1.0.0

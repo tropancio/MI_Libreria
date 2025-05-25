@@ -1,7 +1,7 @@
 
 import pyodbc
 import pandas as pd
-
+import shutil
 
 
 def get_conn(path=r"C:\Users\MaximilianoAlarcon\Desktop\DJMax\Data.accdb"):
@@ -54,3 +54,16 @@ def Cargar_Data_DB(conn,Tabla,df):
     cursor.executemany(query, registro)
     cursor.commit()
     cursor.close()
+
+
+def copy_accdb(destino):
+    """
+    Copia el archivo de base de datos a la ruta especificada.
+    """
+    originall = r".\black.accdb"
+    shutil.copy2(originall, destino)
+    print(f"Archivo copiado a {destino}")
+
+
+
+    
