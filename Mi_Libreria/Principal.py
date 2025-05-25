@@ -49,27 +49,33 @@ def Valores_Numericos(valor1):
 def convertir_columnas(df):
     df = df.copy()
     df = df.applymap(Valores_Numericos)
+
     columnas_numericas = []
     columnas_fecha = []
 
     for col in df.columns:
-        if df[col].dtype == 'object' or pd.api.types.is_string_dtype(df[col]):
-            serie = df[col].dropna().astype(str)
+        serie = df[col].dropna().astype(str)
 
-            # Intentar conversión a número
-            numerica = pd.to_numeric(serie, errors='coerce')
-            if numerica.notna().sum() == serie.notna().sum():
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-                columnas_numericas.append(col)
-                continue
+        # Intentar conversión a número
+        numerica = pd.to_numeric(serie, errors='coerce')
+        if numerica.notna().sum() == serie.notna().sum() and len(serie) > 0:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+            columnas_numericas.append(col)
+            continue
 
-            # Intentar conversión a fecha, sin warnings molestos
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                fecha = pd.to_datetime(serie, errors='coerce')
-            if fecha.notna().sum() == serie.notna().sum():
-                df[col] = pd.to_datetime(df[col], errors='coerce')
-                columnas_fecha.append(col)
+        # Intentar conversión a fecha, sin warnings molestos
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            fecha = pd.to_datetime(serie, errors='coerce')
+
+        if fecha.notna().sum() == serie.notna().sum() and len(serie) > 0:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+            columnas_fecha.append(col)
+            continue
+
+    # Convertir todas las columnas object a string
+    for col in df.select_dtypes(include=['object']).columns:
+        df[col] = df[col].astype("string")
 
     return df
 
