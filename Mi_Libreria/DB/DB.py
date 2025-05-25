@@ -64,6 +64,11 @@ def copy_accdb(destino):
     shutil.copy2(originall, destino)
     print(f"Archivo copiado a {destino}")
 
+def get_tablas(conn):
+    cursor = conn.cursor()
+    tablas = [x for x in cursor.tables() if x.table_type == 'TABLE']
+    return tablas
+
 
 
     
