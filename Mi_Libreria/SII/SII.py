@@ -10,7 +10,7 @@ import pandas as pd
 import warnings
 import os
 
-from .Principal import *
+from Mi_Libreria.Principal.Principal import *
 
 class Pagina():
     

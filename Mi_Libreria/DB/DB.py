@@ -5,15 +5,18 @@ import shutil
 
 
 def get_conn(path=r"C:\Users\MaximilianoAlarcon\Desktop\DJMax\Data.accdb"):
+
     """
+    path=
     Devulve un conn de la ruta indicada
     """
+
     conn_str = (
         r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
         rf'DBQ={path};'
     )    
     conn = pyodbc.connect(conn_str)
-    return conn    
+    return conn 
 
 
 def Ejecutar(conn,query):
@@ -37,7 +40,7 @@ def Consultas(conn, query):
     cursor.execute(query)
     columnas = [col[0] for col in cursor.description]
     datos = cursor.fetchall()
-    df = pd.DataFrame(datos, columns=columnas)
+    df = pd.DataFrame([list(x) for x in datos], columns=columnas)
     cursor.close()
     return df
 
@@ -67,6 +70,7 @@ def copy_accdb(destino):
 def get_tablas(conn):
     cursor = conn.cursor()
     tablas = [x for x in cursor.tables() if x.table_type == 'TABLE']
+    cursor.close()
     return tablas
 
 
