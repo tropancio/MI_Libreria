@@ -24,27 +24,28 @@ def Numeros(valor):
     except ValueError:
         return original
 
+
 def Extraer_numeros(texto):
     texto = str(texto)  # Forzamos a string por si viene otro tipo (e.g., lista, int, float, etc.)
     numeros = re.findall(r'-?\d+(?:\.\d+)?', texto)
     return [int(n) if '.' not in n else float(n) for n in numeros]
 
-def Valores_Numericos(valor1):
-    
-    valor = str(valor1).strip()  # elimina espacios, tabs, saltos de línea al inicio y final
-    valor_limpio = valor.replace('.', '').replace(',', '.')
 
+def Valores_Numericos(valor1,operacion=None):
+    valor = str(valor1).strip()  # elimina espacios, tabs, saltos de línea al inicio y final
+    if operacion is not None:
+        valor = operacion(valor)
     try:
-        return int(valor_limpio)
-        
+        return int(valor) 
     except ValueError:
         try:
-            return float(valor_limpio)
+            return float(valor)
             
         except ValueError:
             pass
                 
     return valor1
+
 
 def convertir_columnas(df):
     df = df.copy()
@@ -79,6 +80,12 @@ def convertir_columnas(df):
 
     return df
 
+def Renombrar_columnas(df):
+    columnas = df.columns
+    columnas = [col.upper() for col in columnas]
+    columnas = [col.replace(" ", "_") for col in columnas]
+    df.columns = columnas
+    return df
 
 def Comunes(lista1, lista2, nombre="Key"):
     """
@@ -182,33 +189,34 @@ def Cruzar_registro(original,nuevo,excepciones=[],method="nuevos"):
 
 
     
-def Rellenar_Vacios(Tabla):
-    for col in Tabla.columns:
-        tipo = Tabla[col].dtype
+def Rellenar_Vacios(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    out = convertir_columnas(df)
 
-        if np.issubdtype(tipo, np.number):
-            Tabla[col] = Tabla[col].fillna(0)
+    for col in out.columns:
+        dtype = out[col].dtype
 
-        elif tipo == object or pd.api.types.is_string_dtype(tipo):
-            Tabla[col] = Tabla[col].astype(str)
-            Tabla[col] = Tabla[col].fillna("")
-        
-        elif np.issubdtype(tipo, np.bool_):
-            Tabla[col] = Tabla[col].fillna(False)
-        
-        elif np.issubdtype(tipo, np.datetime64):
-            Tabla[col] = Tabla[col].fillna(pd.Timestamp("1900-01-01"))
-        
-        elif tipo == object or pd.api.types.is_string_dtype(tipo):
-            Tabla[col] = Tabla[col].fillna("")
-        
+        if is_numeric_dtype(dtype):
+            out[col] = out[col].fillna(0)
+
+        elif is_bool_dtype(dtype):
+            out[col] = out[col].fillna(False)
+
+        elif is_datetime64_any_dtype(dtype):
+            out[col] = out[col].fillna(pd.Timestamp("1900-01-01"))
+
+        elif is_string_dtype(dtype) or dtype == object:
+            # rellena primero y luego *opcionalmente* convierte a string
+            out[col] = out[col].fillna("").astype(str)
+
+
         else:
-            print(f"Tipo no manejado: {col} ({tipo}) — sin modificar")
-    
-    return Tabla
+            print(f"Tipo no manejado: {col} ({dtype}) — sin modificar")
 
+    out = convertir_columnas(out)
+    return out
 
-def Resumir(Tabla,Agrup,Suma=None):
+def Resumir(Tabla,Agrup,Suma=None): 
     if Suma:
         return Tabla.groupby([Agrup]).agg(can=(Agrup,"count"),suma=(Suma,"sum")).reset_index()
     else:
