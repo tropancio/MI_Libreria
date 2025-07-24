@@ -4,6 +4,10 @@ import numpy as np
 import itertools
 import re
 
+from pandas.api.types import (is_numeric_dtype, is_bool_dtype,
+                              is_datetime64_any_dtype,is_string_dtype)
+
+
 def Enumerar(lista):
     """
     genera un listado de los elementos de una lista
@@ -187,7 +191,6 @@ def Cruzar_registro(original,nuevo,excepciones=[],method="nuevos"):
     else: 
         return nuevo 
 
-
     
 def Rellenar_Vacios(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
@@ -208,7 +211,6 @@ def Rellenar_Vacios(df: pd.DataFrame) -> pd.DataFrame:
         elif is_string_dtype(dtype) or dtype == object:
             # rellena primero y luego *opcionalmente* convierte a string
             out[col] = out[col].fillna("").astype(str)
-
 
         else:
             print(f"Tipo no manejado: {col} ({dtype}) — sin modificar")
