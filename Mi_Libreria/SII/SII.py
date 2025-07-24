@@ -82,7 +82,22 @@ class Procesos():
         # self.Ruta = "C:/Users/MaximilianoAlarcon/Downloads/"
 
     def formatear_texto(self,texto):
-        return texto.upper().replace(" ", "_")
+        return texto.upper().replace(" ", "_").replace(".", "")
+
+
+    def Esperar_clickable(self,driver,xpath,timeout=10, reintentos=3):
+        for intento in range(reintentos):
+            try:
+                WebDriverWait(driver, timeout).until(
+                    EC.element_to_be_clickable((By.XPATH, xpath))
+                ).click()
+                
+                return None
+            
+            except StaleElementReferenceException:
+                pass
+
+        assert False, f"No se pudo encontrar el elemento '{xpath}' después de {reintentos} reintentos."  
 
     def Ingresar_Periodo_RCV(self,Periodo=[]):
         """
@@ -92,6 +107,7 @@ class Procesos():
         Contenedor = WebDriverWait(self.pagina, 10).until(
             EC.presence_of_element_located((By.NAME, "formContribuyente"))
         )
+
         if len(Periodo)>0:
             mes,ano = Periodo
             meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -145,12 +161,10 @@ class Procesos():
             
             if registro == 0:
                 return None
-    
-            pendiente = WebDriverWait(self.pagina, 10).until(
-                EC.presence_of_element_located((By.XPATH, f'//*[text()="Pendientes"]'))
-                )
             
-            pendiente.click()
+            self.Esperar_clickable(self.pagina, f'//*[text()="Pendientes"]')
+
+            
             return None
             
         elif registro == 1:
@@ -222,7 +236,7 @@ class Procesos():
                     EC.presence_of_element_located((By.TAG_NAME, 'table'))
                     )   
                 
-                registros = pd.read_html(detalle.get_attribute("outerHTML"))
+                registros = pd.read_html(detalle.get_attribute("outerHTML"),decimal=",", thousands=".")
             
                 for x1 in registros:
                     if len(x1)>1:
@@ -240,12 +254,17 @@ class Procesos():
             except:
                 pass
     
-        final_final = pd.concat(Todas_las_tablas)
-        final_final = final_final.rename(columns={x:self.formatear_texto(x) for x in final_final.columns})
-        final_final = final_final[final_final["TIPO_COMPRA"]=="Del Giro"]
-        final_final = convertir_columnas(final_final.fillna(0))
+        try:
+            final_final = pd.concat(Todas_las_tablas)
+            final_final = final_final.rename(columns={x:self.formatear_texto(x) for x in final_final.columns})
+            final_final = final_final[final_final["TIPO_COMPRA"]=="Del Giro"]
+            final_final = convertir_columnas(final_final.fillna(0))
+            
+            return [resumen,final_final]
         
-        return [resumen,final_final]
+        except:
+            return [resumen,pd.DataFrame()]
+
     
     def Compra_Venta(self, Parametro=[],Rut="",Empresa1=""):
             self.modulo.Ingresar(pagina_sii=1)
@@ -257,6 +276,8 @@ class Procesos():
             self.Ingresar_registro_RV(registro=0)
             if self.Consultar_Existencia_Registros():
                     resumen,rc = self.Extraer_Registro(tipo1=0)
+                    rc["ANO_SII"]=Parametro[1]  
+                    rc["MES_SII"]=Parametro[0]
                     RC = rc
         
             #Pendiente
@@ -265,6 +286,8 @@ class Procesos():
             self.Ingresar_registro_RV(registro=2)
             if self.Consultar_Existencia_Registros():
                     resumen,rc = self.Extraer_Registro(tipo1=0)
+                    rc["ANO_SII"]=Parametro[1]  
+                    rc["MES_SII"]=Parametro[0]
                     RCP = rc
     
             #Ventas
@@ -273,6 +296,8 @@ class Procesos():
             self.Ingresar_registro_RV(registro=1)
             if self.Consultar_Existencia_Registros():
                     resumen,rc = self.Extraer_Registro(tipo1=1)
+                    rc["ANO_SII"]=Parametro[1]  
+                    rc["MES_SII"]=Parametro[0]
                     RV = rc
         
             Reporte={
@@ -282,11 +307,48 @@ class Procesos():
             return Reporte
 
     
-    def Registro_Compra(self,meses,ano=None,Empresa1="RC"):
+    def Registro_Compra(self, meses, ano=None,Empresa1="RC") -> list:
         self.modulo.Ingresar(pagina_sii=1)
         assert type(meses)==list,"Los meses deben estar en una lista"
-        for mes in meses:
-            Reporte=self.Compra_Venta(Empresa1,mes,ano)
+
+        reportes = []
+
+        if ano is None:
+            for mes in meses:
+                Reporte=self.Compra_Venta(Parametro=[mes, a])
+                reportes.append(Reporte)
+        
+        else:
+            for a in ano:
+                for mes in meses:
+                    Reporte=self.Compra_Venta(Parametro=[mes, a])
+                    reportes.append(Reporte)
+
+
+        rc_list, rcp_list, rv_list = [], [], []
+        # Agrega resultados a las listas respectivas
+        for reporte in reportes:
+            if reporte.get("RC") is not None:
+                rc_list.append(reporte["RC"])
+
+            if reporte.get("RCP") is not None:
+                rcp_list.append(reporte["RCP"])
+
+            if reporte.get("RV") is not None:
+                rv_list.append(reporte["RV"])
+
+        # Concatena en un único DataFrame si las listas no están vacías
+        rc_final = pd.concat(rc_list, ignore_index=True) if rc_list else pd.DataFrame()
+        rcp_final = pd.concat(rcp_list, ignore_index=True) if rcp_list else pd.DataFrame()
+        rv_final = pd.concat(rv_list, ignore_index=True) if rv_list else pd.DataFrame()
+
+        # Retorna diccionario con DataFrames consolidados
+        return {
+            "RC": rc_final,
+            "RCP": rcp_final,
+            "RV": rv_final
+        }
+        
 
 
 #----------------------------------------------------------------------------------------------
@@ -337,7 +399,7 @@ class Procesos():
             self.pagina.back()
             
     
-    def F29(self,meses,detalle = False):
+    def F29(self,meses, detalle = False):
         self.modulo.Ingresar(pagina_sii=3)
         assert type(meses)==list,"Los meses deben estar en una lista"
 
@@ -396,6 +458,3 @@ class Procesos():
             
             else :
                 pass
-
-
-
