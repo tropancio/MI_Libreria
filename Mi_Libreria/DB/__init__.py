@@ -2,7 +2,7 @@ import pyodbc
 import pandas as pd
 
 # Import the main class
-from .DB_CLASS import DatabaseConnection
+from .DB import DatabaseConnection
 
 # Export the main class
 __all__ = [
