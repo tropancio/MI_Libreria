@@ -63,13 +63,14 @@ class DatabaseConnection:
         try:
             cursor = conn.cursor()
             cursor.execute(query)
+            rows_affected = cursor.rowcount
             cursor.commit()
             cursor.close()
 
             return {
                 "status": True,
                 "message": "Query executed successfully",
-                "rows_affected": cursor.rowcount
+                "rows_affected": rows_affected
             }
         
         except Exception as e:
