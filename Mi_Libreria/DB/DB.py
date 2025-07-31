@@ -135,11 +135,13 @@ class DatabaseConnection:
 
     def generar_tabla(self, conn, tabla, campos: pd.DataFrame) -> bool:
         """Genera una nueva tabla en la base de datos"""
+        
         mapa_tipos = {
             "string[python]": "TEXT",
             "float64": "DOUBLE",
             "datetime64[ns]": "DATETIME",
-            "int64": "INTEGER"
+            "int64": "INTEGER",
+            "Int64": "INTEGER"
         }
 
         campos["tipo_origen"] = campos["tipo_origen"].astype(str)
